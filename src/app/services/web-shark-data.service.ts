@@ -20,6 +20,7 @@ class BufferData {
   providedIn: 'root'
 })
 export class WebSharkDataService {
+  bs: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   private url = `${environment.apiUrl}json`;
   private urlUpload = `${environment.apiUrl}upload`;
@@ -28,25 +29,15 @@ export class WebSharkDataService {
   public updates: Observable<any>;
 
   constructor(private http: HttpClient) {
-    const getParam = decodeURIComponent(location.hash.slice(1))
-    setTimeout(() => {
-      if (getParam) {
-        this.getFiles().then(f => {
-          // hash
-          const fileObject = f.files.find((i: any) => hash(i.name) === getParam);
-          if (!fileObject) {
-            location.hash = '';
-            return;
-          }
-
-          const fileName = fileObject.name;
-          StaticData.captureFile = fileName;
-          location.hash = '#' + encodeURIComponent(hash(fileName));
-          this.behavior.next({});
-        })
-      }
-    }, 200);
+    const fileName = decodeURIComponent(location.hash.slice(1))
+    if (fileName) {
+      this.setCaptureFile(fileName);
+    }
     this.updates = this.behavior.asObservable();
+  }
+
+  listen(): Observable<any> {
+    return this.bs.asObservable();
   }
 
   private params(method: string, paramObj: any): string {
@@ -72,7 +63,7 @@ export class WebSharkDataService {
   }
   public setCaptureFile(fileName: string) {
     StaticData.captureFile = fileName;
-    location.hash = '#' + hash(fileName);
+    location.hash = '#' + fileName;
     this.behavior.next({});
   }
 
@@ -113,14 +104,18 @@ export class WebSharkDataService {
   }
 
   getFiles(dir: string = ''): Promise<any> {
-    return this.httpGet('files', dir && 'dir=' + encodeURIComponent('/' + dir));
+    return Promise.resolve({
+      files: [
+      ]
+    });
+    // return this.httpGet('files', dir && 'dir=' + encodeURIComponent('/' + dir));
   }
 
-  getFrames(limit = 120): Promise<any> {
-    if (limit === 0) {
-      return this.httpGet('frames', {});
-    }
-    return this.httpGet('frames', { limit });
+  getFrames(limit = 120): Observable<any> {
+    return this.http.get(`${this.url}?${this.params('frames', limit ?? {})}`, {
+      reportProgress: true,
+      observe: 'events'
+    });
   }
 
   getFrameData(frameId: number): Promise<any> {

@@ -31,7 +31,7 @@ export class HomeComponent implements OnInit {
 
   }
   async ngOnInit() {
-    await this.getFiles();
+    // await this.getFiles();
   }
   async getFiles() {
 

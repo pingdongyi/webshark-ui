@@ -4,6 +4,7 @@ import { Component, Input, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } 
 import { hash } from '@app/helper/functions';
 import WaveSurfer from 'wavesurfer.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugins/timeline';
+import { lastValueFrom } from 'rxjs';
 
 declare const transcode: Function;
 const DATA_TYPE = 'application/octet-stream';
@@ -100,7 +101,7 @@ export class TapRtpStreamsComponent implements OnInit {
     this.progressMessage.push('Separate PCAP to frames');
     this.cdr.detectChanges();
 
-    const index = await this.webSharkDataService.getFrames(0);
+    const index = await lastValueFrom(this.webSharkDataService.getFrames(0));
     let offset = 24;
     const arrOffset = index.map((i: any, k: number, arr: any[]) => {
       if (k > 0) {

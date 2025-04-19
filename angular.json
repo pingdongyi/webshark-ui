@@ -36,7 +36,6 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "src/enable-threads.js",
               "src/ffmpeg/ffmpeg.min.js",
               "src/ffmpeg-init.js"
             ]
@@ -128,5 +127,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

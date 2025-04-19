@@ -60,6 +60,10 @@ export class MenuComponent implements OnInit {
               a[category] = [];
             }
 
+            if (!Array.isArray(a[category])) {
+              a[category] = [];
+            }
+
             a[category].push({
               name: i.name,
               func: () => this.onMenuClick(i.tap, i.name)

@@ -15,6 +15,8 @@ import { HighlightService } from '@app/services/hightlight.service';
 import { AlertService } from '../alert/alert.service';
 import { CustomTableComponent } from '../custom-table/custom-table.component';
 import { environment } from './../../../../environments/environment';
+import { catchError, EMPTY, filter, lastValueFrom, map, tap } from 'rxjs';
+import { HttpEventType } from '@angular/common/http';
 
 @Component({
   selector: 'app-webshark',
@@ -36,6 +38,11 @@ export class WebsharkComponent implements OnInit, AfterViewInit {
   sizeUp: boolean = false;
   selectedHexArray: any[] = [];
   isKIOSK = !!environment.kiosk;
+  done = false;
+  parsingProgress = 100;
+  loading = false;
+  simulatedProgress = 0;
+  private progressInterval: any;
   @Input() fileList: any = [];
   @Input() framePosition: any = ['horizontal', 'vertical'];
   @Input() set range(val: any) {
@@ -65,7 +72,17 @@ export class WebsharkComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private alertService: AlertService
 
-  ) { }
+  ) { 
+    this.webSharkDataService.listen().subscribe(data => {
+      if (data?.isParsing) {
+        this.parsingProgress = +data?.parsingProgress?.toFixed(2);
+      }
+        setTimeout(() => {
+          this.done = true;
+        }, 1000)
+      }
+    )
+  }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -82,9 +99,56 @@ export class WebsharkComponent implements OnInit, AfterViewInit {
     this.webSharkDataService.setCaptureFile(filename);
   }
 
+  private startSimulatedProgress() {
+    this.simulatedProgress = 0;
+    this.progressInterval = setInterval(() => {
+      if (this.simulatedProgress < 80) {
+        this.simulatedProgress += Math.random() * 5; // 随机增加 0-5 的进度
+        if (this.simulatedProgress > 80) {
+          this.simulatedProgress = 80;
+        }
+        this.cdr.detectChanges();
+      }
+    }, 300); // 每 300ms 更新一次
+  }
+
+  private stopSimulatedProgress() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+  }
+
   private async initData() {
     try {
-      const data = await this.webSharkDataService.getFrames(0);
+      this.loading = true;
+      this.startSimulatedProgress();
+      this.cdr.detectChanges();
+      
+      const data = await lastValueFrom(
+        this.webSharkDataService.getFrames(0).pipe(
+          tap(event => {
+            if (event.type === HttpEventType.DownloadProgress) {
+              const progress = event.total
+                ? (event.loaded / event.total) * 100
+                : 0;
+              this.parsingProgress = progress;
+              this.cdr.detectChanges();
+            }
+          }),
+          filter(event => event.type === HttpEventType.Response),
+          map(event => event.body),
+          catchError(err => {
+            console.error('Parsing error:', err);
+            this.alertService.error('解析失败，请稍后重试');
+            this.loading = false;
+            this.stopSimulatedProgress();
+            this.cdr.detectChanges();
+            return EMPTY;
+          })
+        )
+      );
+
       this.destDetailsTable = data.map((frame: any) => {
         const [id, time, source, description, protocol, length, info] = frame.c;
         const { bg, fg } = frame;
@@ -98,10 +162,15 @@ export class WebsharkComponent implements OnInit, AfterViewInit {
       this.cdr.detectChanges();
       this.setDefaultSelection();
     } catch (error) {
+      this.loading = false;
+      this.stopSimulatedProgress();
+      this.cdr.detectChanges();
       return;
     }
 
     this.initFrameData(1);
+    this.loading = false;
+    this.stopSimulatedProgress();
     this.cdr.detectChanges();
   }
   setDefaultSelection() {
