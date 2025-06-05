@@ -43,7 +43,7 @@
                 class="no-data"
                 *ngIf="!dataTree || (dataTree && dataTree.length === 0)"
               >
-                No Data
+                无数据
               </h1>
             </as-split-area>
             <as-split-area [size]="50">
@@ -61,13 +61,13 @@
 </div>
 <div class="progress-upload" *ngIf="parsingProgress != 100">
   <h1 style="font-size: 24pt;">
-    Loading file: {{ parsingProgress.toFixed(2) }}%
+    正在加载文件: {{ parsingProgress.toFixed(2) }}%
   </h1>
   <div class="progress-bar" [style.width.%]="parsingProgress"></div>
 </div>
 <div class="progress-upload" *ngIf="loading && parsingProgress === 100">
   <h1 style="font-size: 24pt;">
-    Parsing data...
+    正在解析数据...
   </h1>
   <div class="progress-bar" [style.width.%]="simulatedProgress"></div>
 </div>

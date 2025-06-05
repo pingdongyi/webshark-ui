@@ -14,6 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { routing } from './app.routing';
 import { HttpClientModule, HTTP_INTERCEPTORS, HttpClientJsonpModule } from '@angular/common/http';
 import { ErrorInterceptor } from './helper/error.interceptor';
+import { EnvInterceptor } from './helper/env.interceptor';
 import { ModalResizableModule } from './components/controls/modal-resizable/modal-resizable.module';
 import { TapPageModule } from './components/controls/tap/tap-page.module';
 
@@ -43,6 +44,7 @@ import { TapPageModule } from './components/controls/tap/tap-page.module';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: EnvInterceptor, multi: true },
   ]
 })
 export class AppModule { }
