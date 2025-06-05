@@ -1,5 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Import Roboto font */
+@import "@fontsource/roboto/300.css";
+@import "@fontsource/roboto/400.css";
+@import "@fontsource/roboto/500.css";
+
+/* Import Material Icons */
+@import "@fontsource/material-icons";
+
 html,
 body {
   height: 100%;
